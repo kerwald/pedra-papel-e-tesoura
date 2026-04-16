@@ -1,0 +1,10 @@
+# Arquivos do vscode
+.vscode/
+
+# Arquivos de compilação e executáveis
+*.obj
+*.exe
+*.o
+
+
+
