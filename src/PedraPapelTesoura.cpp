@@ -1,5 +1,11 @@
 #include <iostream>
+#include <vector>
+#include "Jogador.hpp"
+#include "Jogo.hpp"
 
 int main(){
-    std::cout << "hello world" << std::endl ;
+
+    std::vector<Jogador> *jogadores = new std::vector<Jogador>;
+    Jogo *jogo = new Jogo( *jogadores );
+    
 }
