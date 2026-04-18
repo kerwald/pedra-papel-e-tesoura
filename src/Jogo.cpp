@@ -88,11 +88,7 @@ void Jogo::executarRodada( const int numeroRodada ){
     if( vencedores.size() == 0 ){
         empate++;
         if( empate == LIMITE_EMPATES ){
-            for( Jogador* &j : ativos ){
-                pote -= j->getApostaRodadaAtual();
-                j->adicionarSaldo( j->getApostaRodadaAtual() - 1 );
-                mesa.adicionarSaldo(1);
-            }
+            aplicarPenalidadesLimiteEmpates( ativos, pote );
             return;
         }
         int valor = executarSubRodadaDesempate( ativos, pote );
@@ -118,6 +114,18 @@ int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
 
     return aposta;
 
+}
+
+void Jogo::coletarJogadasOcultas( const std::vector<Jogador*> &ativos ){
+// falta fazer
+}
+
+void Jogo::limparConsole() const{
+// falta fazer
+}
+
+int executarSubRodadaDesempate( std::vector<Jogador*> &ativos, const int pote ){
+// falta fazer
 }
 
 std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos ){
@@ -221,6 +229,24 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
             pote = 0;
     }
 
+}
+
+void Jogo::aplicarPenalidadesLimiteEmpates( std::vector<Jogador*> &ativos, int pote ){
+    for( Jogador* &j : ativos ){
+        pote -= j->getApostaRodadaAtual();
+        j->adicionarSaldo( j->getApostaRodadaAtual() - 1 );
+        mesa.adicionarSaldo(1);
+    }
+}
+
+int Jogo::contarJogadoresComSaldo() const{
+    int totalJogadoresComSaldo{0};
+    for( Jogador &j : jogadores){
+        if( j.getSaldo() >  0 ){
+            totalJogadoresComSaldo++;
+        }
+    }
+    return totalJogadoresComSaldo;
 }
 
 void Jogo::declararCampeaoFinal(){
