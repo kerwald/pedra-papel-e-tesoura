@@ -44,18 +44,23 @@ void Jogo::imprimirStatusMesa() const {
 void Jogo::executarRodada( const int numeroRodada ){
 
     int pote{0};
+    std::vector<Jogador> ativos;
+    std::vector<Jogador> vencedores;
 
-    for( Jogador j : jogadores ){
-        std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
+    for( Jogador &j : jogadores ){
+        if( j.isAtivoNaRodada() ){
+            std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
+            ativos.push_back( j );
+        } 
     }
     imprimirStatusMesa();
 
-    for( Jogador j : jogadores ){
+    for( Jogador &j : ativos ){
         j.realizarAposta( solicitarAposta( j, 1 ) );
         pote += j.getApostaRodadaAtual();
     }
 
-    for( Jogador j : jogadores ){
+    for( Jogador &j : ativos ){
         if( j.isAtivoNaRodada( ) ){
 
             char jogada;
@@ -79,7 +84,53 @@ void Jogo::executarRodada( const int numeroRodada ){
         }
     }
 
+    vencedores = determinarVencedores( ativos );
+
+
 };
 std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador> &ativos ){
+
+    bool pedra{ false };
+    bool papel{ false };
+    bool tesoura{ false };
+    Jogada jogadaVencedora;
+    std::vector<Jogador> vencedores{};
+
+    for( Jogador j : ativos ){
+        switch ( j.getJogadaAtual() )
+        {
+        case Jogada::PEDRA :
+            pedra = true;
+            break;
+        case Jogada::PAPEL :
+            papel = true;
+            break;
+        case Jogada::TESOURA :
+            tesoura = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if( pedra && papel && tesoura ){
+        return vencedores;
+    } else if( pedra && papel ){
+        jogadaVencedora = Jogada::PAPEL;
+    } else if( papel && tesoura ){
+        jogadaVencedora = Jogada::TESOURA;
+    } else if( tesoura && pedra ) {
+        jogadaVencedora = Jogada::PEDRA;
+    } else{
+        return vencedores;
+    }
+
+    for( Jogador &j : ativos ){
+        if( j.getJogadaAtual() == jogadaVencedora ){
+            vencedores.push_back( j );
+        }
+    }
+
+    return vencedores;
 
 };
