@@ -17,8 +17,8 @@ void Mesa::adicionarSaldo( const int valor ){
 }
 
 void Mesa::reduzirSaldo( const int valor ){
-    if( valor >=0 ){
-        if( valor>=saldo ){
+    if( valor >= 0 ){
+        if( valor <= saldo ){
             saldo -= valor;
         } else{
             std::cerr << "Saldo insuficiente!!!" << std::endl;

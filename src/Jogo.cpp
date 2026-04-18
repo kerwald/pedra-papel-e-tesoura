@@ -151,7 +151,8 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
 
     for( Jogador* &j : ativos ){
         if( j->getSaldo() == 0 ){
-            std::cout << "all-in!!" << std::endl;
+            std::cout << j->getNome() << " continua em all-in!!" << std::endl;
+            continuamNaRodada.push_back( j );
         } else{
             std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
             std::cin >> continuar;
@@ -287,7 +288,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
         }
 
         jogoEncerrado = true;
-        std::cout << "Mesa nao tem como pagar, jogo encerrado!!!";
+        std::cout << "Mesa nao tem como pagar, jogo encerrado!!! ";
         declararCampeaoFinal();
 
     }
@@ -330,9 +331,9 @@ void Jogo::declararCampeaoFinal(){
     }
 
     if( campeao != nullptr ){
-        std::cout << "O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
+        std::cout << " O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
     } else{
-        std::cout << "Jogo finalizado sem campeao!!! " << std::endl;
+        std::cout << " Jogo finalizado sem campeao!!! " << std::endl;
     }
     
 }

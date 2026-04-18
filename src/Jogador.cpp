@@ -1,6 +1,6 @@
 #include "Jogador.hpp"
 
-Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1), temAllin{ true }
+Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1)
 {}
 
 std::string Jogador::getNome() const{
@@ -40,36 +40,30 @@ void Jogador::adicionarSaldo( const int valor ){
 }
 
 void Jogador::reduzirSaldo( const int valor ){
-    if( valor >=0 ){
-        if( valor>=saldo ){
+    if( valor >= 0 ){
+        if( valor <= saldo ){ 
             saldo -= valor;
         } else{
             std::cerr << "Saldo insuficiente!!!" << std::endl;
         }
-        
     } else{
         std::cerr << "Valor invalido!!!" << std::endl;
     }
 }
 
 void Jogador::realizarAposta( const int valor ){
-
-    if( valor >=0 ){
-        if( valor>=saldo ){
+    if( valor >= 0 ){
+        if( valor <= saldo ){ 
             saldo -= valor;
             apostaRodadaAtual = valor;
-        } else{
-            if( temAllin ){
-                temAllin = false;
-            } else{
-                setAtivoNaRodada( false );
-            }
+        } else{ 
+            apostaRodadaAtual = saldo; 
+            saldo = 0; 
+            std::cout << nome << " deu ALL-IN com " << apostaRodadaAtual << " fichas!" << std::endl;
         }
-        
     } else{
         std::cerr << "Valor invalido!!!" << std::endl;
     }
-
 }
 
 void Jogador::resetarRodada(){
