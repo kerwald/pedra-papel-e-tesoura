@@ -287,6 +287,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
         }
 
         jogoEncerrado = true;
+        std::cout << "Mesa nao tem como pagar, jogo encerrado!!!";
         declararCampeaoFinal();
 
     }
