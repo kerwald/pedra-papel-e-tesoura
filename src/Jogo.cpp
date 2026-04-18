@@ -72,8 +72,10 @@ void Jogo::executarRodada( const int numeroRodada ){
                 break;
             case 'p': // paper = papel
                 j.setJogadaAtual( Jogada::PAPEL );
+                break;
             case 's': // scissors = tesoura
                 j.setJogadaAtual( Jogada::TESOURA);
+                break;
             default:
                 std::cerr << "VALOR DIGITADO INVALIDO!!!";
                 break;
@@ -157,41 +159,55 @@ std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador> &ativos ){
 
 void Jogo::distribuirPremio( std::vector<Jogador> ativos, std::vector<Jogador> vencedores, int &pote ){
 
-    int total = pote + mesa.getSaldo();
-    int valorRequisitado{0};
+    int totalDisponivel = pote + mesa.getSaldo();
+    int totalApostadoVencedores{0};
+    int totalPremioVencedores{0};
     for( Jogador &j : vencedores ){
-        valorRequisitado += j.getApostaRodadaAtual()*2;
+        totalApostadoVencedores += j.getApostaRodadaAtual();
     }
+    totalPremioVencedores = totalApostadoVencedores * 2;
 
-    if( pote >= valorRequisitado ){
+    if( pote >= totalPremioVencedores ){
         for( Jogador &j : vencedores ){
             j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
             pote -= j.getApostaRodadaAtual()*2;
         }
-        mesa.adicionarSaldo( pote );
-        pote = 0;
 
-    } else if ( total >= valorRequisitado ){
-        
-
-    } else{
-
-        int divisaoIgualitária{ total / vencedores.size() };
-        int restoDaDivisão{ total % vencedores.size() };
-        mesa.adicionarSaldo( pote );
-        pote = 0;
+    } else if ( totalDisponivel >= totalPremioVencedores ){
         for( Jogador &j : vencedores ){
-            j.adicionarSaldo( divisaoIgualitária );
-            mesa.reduzirSaldo( divisaoIgualitária );
-            if( restoDaDivisão != 0 ){
+            int diferenca{ ( j.getApostaRodadaAtual()*2 ) - pote };
+            if( diferenca <= 0 ){
+                j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
+                pote -= j.getApostaRodadaAtual()*2;
+            }else{
+                j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
+                mesa.reduzirSaldo( diferenca );
+                pote = 0;
+            }
+        }
+    } else{
+        mesa.adicionarSaldo( pote );
+        pote = 0;
+        int parteProporcional{0};
+        int resto{ totalDisponivel % totalApostadoVencedores };
+        for( Jogador &j : vencedores ){
+            parteProporcional = ( totalDisponivel * j.getApostaRodadaAtual()) / totalApostadoVencedores;
+            j.adicionarSaldo( parteProporcional );
+            mesa.reduzirSaldo( parteProporcional );
+            if( resto > 0 ){
                 j.adicionarSaldo( 1 );
                 mesa.reduzirSaldo( 1 );
-                restoDaDivisão--;
+                resto--;
             }
         }
 
         jogoEncerrado = true;
 
+    }
+    
+    if (pote > 0) {
+            mesa.adicionarSaldo( pote );
+            pote = 0;
     }
 
 };
