@@ -10,6 +10,7 @@ class Jogador{
         int apostaRodadaAtual;
         Jogada jogadaAtual;
         bool ativoNaRodada;
+        bool temAllin;
     public:
         Jogador( const std::string nome );
         std::string getNome() const;

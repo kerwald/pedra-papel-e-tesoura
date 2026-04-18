@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <cstdlib>
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
@@ -12,8 +13,9 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores 
         std::cin >> numDeJogadores;
     } while( numDeJogadores < 2 || numDeJogadores > 6 );
 
-    for( int i=0; i<numDeJogadores; i++ ){
+    for( int i=1; i<=numDeJogadores; i++ ){
         std::string nome;
+        std::cout << "jogador numero " << i << " digite seu nome: ";
         std::cin >> nome;
         Jogador jogador( nome );
         jogador.adicionarSaldo( 10 );
@@ -63,6 +65,7 @@ void Jogo::executarRodada( const int numeroRodada ){
         pote += j->getApostaRodadaAtual();
     }
 
+    coletarJogadasOcultas( ativos );
 
     vencedores = determinarVencedores( ativos );
 
@@ -89,7 +92,7 @@ int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
     int aposta{0};
     do{
         std::cout << "Valor minimo: " << apostaMinima << std::endl;
-        std::cout << j.getNome() << " faça sua aposta: ";
+        std::cout << j.getNome() << " faca sua aposta: ";
         std::cin >> aposta;
     }while( aposta < apostaMinima );
 
@@ -103,6 +106,7 @@ void Jogo::coletarJogadasOcultas( std::vector<Jogador*> &ativos ){
         if( j->isAtivoNaRodada( ) ){
 
             char jogada;
+            std::cout << " r -> pedra, p -> papel, s -> tesoura " << std::endl;
             std::cout << j->getNome() << " faca sua jogada: ";
             std::cin >> jogada;
 
@@ -127,7 +131,15 @@ void Jogo::coletarJogadasOcultas( std::vector<Jogador*> &ativos ){
 }
 
 void Jogo::limparConsole() const{
-    std::cout << "\033[2J\033[1;1H";
+    system("cls");
+    for( Jogador &j : jogadores ){
+        if( j.isAtivoNaRodada() ){
+            std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
+        } 
+    }
+
+    imprimirStatusMesa();
+
 }
 
 int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
