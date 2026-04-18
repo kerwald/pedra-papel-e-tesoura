@@ -5,7 +5,7 @@
 
 int main(){
 
-    std::vector<Jogador> *jogadores = new std::vector<Jogador>;
-    Jogo *jogo = new Jogo( *jogadores );
+    std::vector<Jogador> jogadores;
+    Jogo jogo( jogadores );
     
 }

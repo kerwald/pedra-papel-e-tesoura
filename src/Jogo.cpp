@@ -8,6 +8,7 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores 
 
     int numDeJogadores;
     do{
+        std::cout << "Digite o numero de jogadores ( 2 - 6 ) : ";
         std::cin >> numDeJogadores;
     } while( numDeJogadores < 2 || numDeJogadores > 6 );
 
@@ -31,6 +32,10 @@ void Jogo::iniciar(){
     do{
         rodada++;
         executarRodada( rodada );
+        if( contarJogadoresComSaldo() < 2 ){
+            jogoEncerrado = true;
+            declararCampeaoFinal();
+        }
 
     }while( !jogoEncerrado );
     
@@ -117,6 +122,7 @@ void Jogo::coletarJogadasOcultas( std::vector<Jogador*> &ativos ){
                 break;
             }
         }
+        limparConsole();
     }
 }
 
@@ -125,8 +131,12 @@ void Jogo::limparConsole() const{
 }
 
 int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
+
     bool continuar{ true };
-    int devolucao{0};
+    int devolucaoJogador{0};
+    int devolucaoMesa{0};
+    std::vector<Jogador*> continuamNaRodada;
+
     for( Jogador* &j : ativos ){
         if( j->getSaldo() == 0 ){
             std::cout << "all-in!!" << std::endl;
@@ -134,17 +144,25 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
             std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
             std::cin >> continuar;
             if( continuar ){
+                continuamNaRodada.push_back( j );
                 j->reduzirSaldo( 1 );
+                j->realizarAposta( j->getApostaRodadaAtual() + 1  );
                 pote++;
             }else{
-                devolucao = (int) std::ceil( (double) ( j->getApostaRodadaAtual() ) / 2.0 );
-                pote -= devolucao;
-                j->adicionarSaldo( devolucao );
+                devolucaoJogador = (int) std::ceil( (double) ( j->getApostaRodadaAtual() ) / 2.0 );
+                devolucaoMesa = j->getApostaRodadaAtual() - devolucaoJogador;
+                pote -= j->getApostaRodadaAtual();
+                j->adicionarSaldo( devolucaoJogador );
                 j->setAtivoNaRodada( false );
+                mesa.adicionarSaldo( devolucaoMesa );
             }
         }   
     }
-    coletarJogadasOcultas( ativos );
+    ativos.clear();
+    ativos = continuamNaRodada;
+    if( ativos.size() > 1 ){
+        coletarJogadasOcultas( ativos );
+    }
     std::vector<Jogador*> vencedores = determinarVencedores( ativos );
     if( vencedores.size() == 0 ){
         empate++;
@@ -167,6 +185,11 @@ std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos 
     bool tesoura{ false };
     Jogada jogadaVencedora;
     std::vector<Jogador*> vencedores{};
+
+    if( ativos.size() == 1 ){
+        vencedores.push_back( ativos[0] );
+        return vencedores;
+    }
 
     for( Jogador* &j : ativos ){
         switch ( j->getJogadaAtual() )
@@ -284,25 +307,15 @@ int Jogo::contarJogadoresComSaldo() const{
 void Jogo::declararCampeaoFinal(){
 
     Jogador* campeao = nullptr;
-    Jogador* jogadorAtivo = nullptr;
-    int ativos{0};
 
-    if( empate < LIMITE_EMPATES && mesa.getSaldo() == 0 ){
-        int saldo{0};
-        for( Jogador &j : jogadores ){
-            if( saldo < j.getSaldo() ){
-                saldo = j.getSaldo();
-                campeao = &j;
-            }
-            if( j.isAtivoNaRodada() && ativos < 3 ){
-                ativos++;
-                jogadorAtivo = &j;
-            }
+    int saldo{0};
+    for( Jogador &j : jogadores ){
+        if( saldo < j.getSaldo() ){
+            saldo = j.getSaldo();
+            campeao = &j;
         }
-    } 
-    if( ativos == 1 ){
-        campeao = jogadorAtivo;
     }
+
     if( campeao != nullptr ){
         std::cout << "O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
     } else{
