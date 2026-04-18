@@ -60,6 +60,6 @@ void Jogador::realizarAposta( const int valor ){
 void Jogador::resetarRodada(){
 
     apostaRodadaAtual = 1;
-    ativoNaRodada = true;
+    ativoNaRodada = false;
 
 }

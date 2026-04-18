@@ -44,8 +44,9 @@ void Jogo::executarRodada( const int numeroRodada ){
     std::vector<Jogador*> vencedores;
     
     for( Jogador &j : jogadores ){
-        if( j.isAtivoNaRodada() ){
+        if( j.getSaldo() > 0 ){
             std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
+            j.setAtivoNaRodada( true );
             ativos.push_back( &j );
         } 
     }
@@ -57,31 +58,6 @@ void Jogo::executarRodada( const int numeroRodada ){
         pote += j->getApostaRodadaAtual();
     }
 
-    for( Jogador* &j : ativos ){
-        if( j->isAtivoNaRodada( ) ){
-
-            char jogada;
-            std::cout << numeroRodada << "° Rodada" << std::endl;
-            std::cout << j->getNome() << " faca sua jogada: ";
-            std::cin >> jogada;
-
-            switch ( jogada )
-            {
-            case 'r': // rock = pedra
-                j->setJogadaAtual( Jogada::PEDRA );
-                break;
-            case 'p': // paper = papel
-                j->setJogadaAtual( Jogada::PAPEL );
-                break;
-            case 's': // scissors = tesoura
-                j->setJogadaAtual( Jogada::TESOURA);
-                break;
-            default:
-                std::cerr << "VALOR DIGITADO INVALIDO!!!";
-                break;
-            }
-        }
-    }
 
     vencedores = determinarVencedores( ativos );
 
@@ -91,7 +67,7 @@ void Jogo::executarRodada( const int numeroRodada ){
             aplicarPenalidadesLimiteEmpates( ativos, pote );
             return;
         }
-        int valor = executarSubRodadaDesempate( ativos, pote );
+        pote = executarSubRodadaDesempate( ativos, pote );
     } else{
         distribuirPremio( ativos, vencedores, pote );
         empate = 0;
@@ -116,16 +92,72 @@ int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
 
 }
 
-void Jogo::coletarJogadasOcultas( const std::vector<Jogador*> &ativos ){
-// falta fazer
+void Jogo::coletarJogadasOcultas( std::vector<Jogador*> &ativos ){
+
+    for( Jogador* &j : ativos ){
+        if( j->isAtivoNaRodada( ) ){
+
+            char jogada;
+            std::cout << j->getNome() << " faca sua jogada: ";
+            std::cin >> jogada;
+
+            switch ( jogada )
+            {
+            case 'r': // rock = pedra
+                j->setJogadaAtual( Jogada::PEDRA );
+                break;
+            case 'p': // paper = papel
+                j->setJogadaAtual( Jogada::PAPEL );
+                break;
+            case 's': // scissors = tesoura
+                j->setJogadaAtual( Jogada::TESOURA);
+                break;
+            default:
+                std::cerr << "VALOR DIGITADO INVALIDO!!!";
+                break;
+            }
+        }
+    }
 }
 
 void Jogo::limparConsole() const{
-// falta fazer
+    std::cout << "\033[2J\033[1;1H";
 }
 
-int executarSubRodadaDesempate( std::vector<Jogador*> &ativos, const int pote ){
-// falta fazer
+int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
+    bool continuar{ true };
+    int devolucao{0};
+    for( Jogador* &j : ativos ){
+        if( j->getSaldo() == 0 ){
+            std::cout << "all-in!!" << std::endl;
+        } else{
+            std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
+            std::cin >> continuar;
+            if( continuar ){
+                j->reduzirSaldo( 1 );
+                pote++;
+            }else{
+                devolucao = (int) std::ceil( (double) ( j->getApostaRodadaAtual() ) / 2.0 );
+                pote -= devolucao;
+                j->adicionarSaldo( devolucao );
+                j->setAtivoNaRodada( false );
+            }
+        }   
+    }
+    coletarJogadasOcultas( ativos );
+    std::vector<Jogador*> vencedores = determinarVencedores( ativos );
+    if( vencedores.size() == 0 ){
+        empate++;
+        if( empate == LIMITE_EMPATES ){
+            aplicarPenalidadesLimiteEmpates( ativos, pote );
+            return pote;
+        }
+        pote = executarSubRodadaDesempate( ativos, pote );
+    } else{
+        distribuirPremio( ativos, vencedores, pote );
+        empate = 0;
+    }
+    return pote;
 }
 
 std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos ){
@@ -252,6 +284,8 @@ int Jogo::contarJogadoresComSaldo() const{
 void Jogo::declararCampeaoFinal(){
 
     Jogador* campeao = nullptr;
+    Jogador* jogadorAtivo = nullptr;
+    int ativos{0};
 
     if( empate < LIMITE_EMPATES && mesa.getSaldo() == 0 ){
         int saldo{0};
@@ -260,8 +294,15 @@ void Jogo::declararCampeaoFinal(){
                 saldo = j.getSaldo();
                 campeao = &j;
             }
+            if( j.isAtivoNaRodada() && ativos < 3 ){
+                ativos++;
+                jogadorAtivo = &j;
+            }
         }
     } 
+    if( ativos == 1 ){
+        campeao = jogadorAtivo;
+    }
     if( campeao != nullptr ){
         std::cout << "O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
     } else{
