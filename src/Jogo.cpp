@@ -41,7 +41,7 @@ void Jogo::executarRodada( const int numeroRodada ){
 
     int pote{0};
     std::vector<Jogador*> ativos;
-    std::vector<Jogador> vencedores;
+    std::vector<Jogador*> vencedores;
     
     for( Jogador &j : jogadores ){
         if( j.isAtivoNaRodada() ){
@@ -120,13 +120,13 @@ int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
 
 }
 
-std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador*> &ativos ){
+std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos ){
 
     bool pedra{ false };
     bool papel{ false };
     bool tesoura{ false };
     Jogada jogadaVencedora;
-    std::vector<Jogador> vencedores{};
+    std::vector<Jogador*> vencedores{};
 
     for( Jogador* &j : ativos ){
         switch ( j->getJogadaAtual() )
@@ -159,7 +159,7 @@ std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador*> &ativos )
 
     for( Jogador* &j : ativos ){
         if( j->getJogadaAtual() == jogadaVencedora ){
-            vencedores.push_back( *j );
+            vencedores.push_back( j );
         }
     }
 
@@ -167,30 +167,30 @@ std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador*> &ativos )
 
 };
 
-void Jogo::distribuirPremio( std::vector<Jogador*> ativos, std::vector<Jogador> vencedores, int &pote ){
+void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*> &vencedores, int &pote ){
 
     int totalDisponivel = pote + mesa.getSaldo();
     int totalApostadoVencedores{0};
     int totalPremioVencedores{0};
-    for( Jogador &j : vencedores ){
-        totalApostadoVencedores += j.getApostaRodadaAtual();
+    for( Jogador* &j : vencedores ){
+        totalApostadoVencedores += j->getApostaRodadaAtual();
     }
     totalPremioVencedores = totalApostadoVencedores * 2;
 
     if( pote >= totalPremioVencedores ){
-        for( Jogador &j : vencedores ){
-            j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
-            pote -= j.getApostaRodadaAtual()*2;
+        for( Jogador* &j : vencedores ){
+            j->adicionarSaldo( j->getApostaRodadaAtual()*2 );
+            pote -= j->getApostaRodadaAtual()*2;
         }
 
     } else if ( totalDisponivel >= totalPremioVencedores ){
-        for( Jogador &j : vencedores ){
-            int diferenca{ ( j.getApostaRodadaAtual()*2 ) - pote };
+        for( Jogador* &j : vencedores ){
+            int diferenca{ ( j->getApostaRodadaAtual()*2 ) - pote };
             if( diferenca <= 0 ){
-                j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
-                pote -= j.getApostaRodadaAtual()*2;
+                j->adicionarSaldo( j->getApostaRodadaAtual()*2 );
+                pote -= j->getApostaRodadaAtual()*2;
             }else{
-                j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
+                j->adicionarSaldo( j->getApostaRodadaAtual()*2 );
                 mesa.reduzirSaldo( diferenca );
                 pote = 0;
             }
@@ -200,12 +200,12 @@ void Jogo::distribuirPremio( std::vector<Jogador*> ativos, std::vector<Jogador> 
         pote = 0;
         int parteProporcional{0};
         int resto{ totalDisponivel % totalApostadoVencedores };
-        for( Jogador &j : vencedores ){
-            parteProporcional = ( totalDisponivel * j.getApostaRodadaAtual()) / totalApostadoVencedores;
-            j.adicionarSaldo( parteProporcional );
+        for( Jogador* &j : vencedores ){
+            parteProporcional = ( totalDisponivel * j->getApostaRodadaAtual()) / totalApostadoVencedores;
+            j->adicionarSaldo( parteProporcional );
             mesa.reduzirSaldo( parteProporcional );
             if( resto > 0 ){
-                j.adicionarSaldo( 1 );
+                j->adicionarSaldo( 1 );
                 mesa.reduzirSaldo( 1 );
                 resto--;
             }
@@ -236,6 +236,10 @@ void Jogo::declararCampeaoFinal(){
             }
         }
     } 
-
-    std::cout << "O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
+    if( campeao != nullptr ){
+        std::cout << "O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
+    } else{
+        std::cout << "Jogo finalizado sem campeao!!! " << std::endl;
+    }
+    
 };
