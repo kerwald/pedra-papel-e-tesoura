@@ -22,7 +22,7 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores 
     int valorInicial = (int) std::ceil( (double) ( numDeJogadores * 10 ) / 2.0 );
     this->mesa.adicionarSaldo( valorInicial );
     iniciar();
-};
+}
 
 void Jogo::iniciar(){
 
@@ -35,7 +35,7 @@ void Jogo::iniciar(){
     }while( !jogoEncerrado );
     
     
-};
+}
 
 void Jogo::executarRodada( const int numeroRodada ){
 
@@ -101,11 +101,11 @@ void Jogo::executarRodada( const int numeroRodada ){
         empate = 0;
     }
 
-};
+}
 
 void Jogo::imprimirStatusMesa() const {
     std::cout << mesa.getSaldo() << std::endl;
-};
+}
 
 int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
 
@@ -165,7 +165,7 @@ std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos 
 
     return vencedores;
 
-};
+}
 
 void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*> &vencedores, int &pote ){
 
@@ -221,7 +221,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
             pote = 0;
     }
 
-};
+}
 
 void Jogo::declararCampeaoFinal(){
 
@@ -242,4 +242,4 @@ void Jogo::declararCampeaoFinal(){
         std::cout << "Jogo finalizado sem campeao!!! " << std::endl;
     }
     
-};
+}
