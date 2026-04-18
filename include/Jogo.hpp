@@ -19,7 +19,7 @@ class Jogo{
         void limparConsole() const;
         int executarSubRodadaDesempate( std::vector<Jogador> &ativos, const int pote );
         std::vector<Jogador> determinarVencedores( std::vector<Jogador> &ativos );
-        void distribuirPremio( std::vector<Jogador> ativos, std::vector<Jogador> vencedores, const int pote );
+        void distribuirPremio( std::vector<Jogador> ativos, std::vector<Jogador> vencedores, int &pote );
         void aplicarPenalidadesLimiteEmpates( std::vector<Jogador> ativos, const int pote );
         int contarJogadoresComSaldo() const;
         void declararCampeaoFinal()const;

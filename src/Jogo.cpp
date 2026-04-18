@@ -37,13 +37,10 @@ void Jogo::iniciar(){
     
 };
 
-void Jogo::imprimirStatusMesa() const {
-    std::cout << mesa.getSaldo() << std::endl;
-};
-
 void Jogo::executarRodada( const int numeroRodada ){
 
     int pote{0};
+    int empate{0};
     std::vector<Jogador> ativos;
     std::vector<Jogador> vencedores;
 
@@ -86,8 +83,31 @@ void Jogo::executarRodada( const int numeroRodada ){
 
     vencedores = determinarVencedores( ativos );
 
+    if( vencedores.size() == 0 ){
+        empate++;
+    } else{
+        distribuirPremio( ativos, vencedores, pote );
+    }
 
 };
+
+void Jogo::imprimirStatusMesa() const {
+    std::cout << mesa.getSaldo() << std::endl;
+};
+
+int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
+
+    int aposta{0};
+    do{
+        std::cout << "Valor minimo: " << apostaMinima << std::endl;
+        std::cout << j.getNome() << " faça sua aposta: ";
+        std::cin >> aposta;
+    }while( aposta < apostaMinima );
+
+    return aposta;
+
+}
+
 std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador> &ativos ){
 
     bool pedra{ false };
@@ -132,5 +152,46 @@ std::vector<Jogador> Jogo::determinarVencedores( std::vector<Jogador> &ativos ){
     }
 
     return vencedores;
+
+};
+
+void Jogo::distribuirPremio( std::vector<Jogador> ativos, std::vector<Jogador> vencedores, int &pote ){
+
+    int total = pote + mesa.getSaldo();
+    int valorRequisitado{0};
+    for( Jogador &j : vencedores ){
+        valorRequisitado += j.getApostaRodadaAtual()*2;
+    }
+
+    if( pote >= valorRequisitado ){
+        for( Jogador &j : vencedores ){
+            j.adicionarSaldo( j.getApostaRodadaAtual()*2 );
+            pote -= j.getApostaRodadaAtual()*2;
+        }
+        mesa.adicionarSaldo( pote );
+        pote = 0;
+
+    } else if ( total >= valorRequisitado ){
+        
+
+    } else{
+
+        int divisaoIgualitária{ total / vencedores.size() };
+        int restoDaDivisão{ total % vencedores.size() };
+        mesa.adicionarSaldo( pote );
+        pote = 0;
+        for( Jogador &j : vencedores ){
+            j.adicionarSaldo( divisaoIgualitária );
+            mesa.reduzirSaldo( divisaoIgualitária );
+            if( restoDaDivisão != 0 ){
+                j.adicionarSaldo( 1 );
+                mesa.reduzirSaldo( 1 );
+                restoDaDivisão--;
+            }
+        }
+
+        jogoEncerrado = true;
+
+    }
 
 };
