@@ -331,7 +331,7 @@ void Jogo::declararCampeaoFinal(){
     }
 
     if( campeao != nullptr ){
-        std::cout << " O jogador " << campeao->getNome() <<  " é o grande campeao!!!" << std::endl;
+        std::cout << " O jogador " << campeao->getNome() <<  " e o grande campeao!!!" << std::endl;
     } else{
         std::cout << " Jogo finalizado sem campeao!!! " << std::endl;
     }
