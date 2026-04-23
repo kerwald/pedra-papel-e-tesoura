@@ -1,7 +1,15 @@
+#include <iostream>
 #include "Jogador.hpp"
+#include "Jogo.hpp"
+#include "Fase.hpp"
 
 Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1)
 {}
+
+void Jogador::run (){
+    std::cout << "Jogador " << nome << " esta jogando..." << std::endl;
+    std::cout << "fase atual: " << jogo->getFaseAtual() << std::endl;
+}
 
 std::string Jogador::getNome() const{
     return nome;
@@ -71,4 +79,8 @@ void Jogador::resetarRodada(){
     apostaRodadaAtual = 1;
     ativoNaRodada = false;
 
+}
+
+void Jogador::setJogo( Jogo *jogo ){
+    this->jogo = jogo;
 }

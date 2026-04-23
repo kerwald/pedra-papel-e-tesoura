@@ -5,7 +5,7 @@
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0) {
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ) {
 
     int numDeJogadores;
     do{
@@ -19,6 +19,7 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores 
         std::cin >> nome;
         Jogador jogador( nome );
         jogador.adicionarSaldo( 10 );
+        jogador.setJogo( this );
         jogadores.push_back( jogador );
     }
 
@@ -336,4 +337,8 @@ void Jogo::declararCampeaoFinal(){
         std::cout << " Jogo finalizado sem campeao!!! " << std::endl;
     }
     
+}
+
+Fase Jogo::getFaseAtual() const{
+    return faseAtual;
 }

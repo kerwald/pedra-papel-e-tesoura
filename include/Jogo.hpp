@@ -1,5 +1,8 @@
 #pragma once
 #include <vector>
+#include <mutex>
+#include <condition_variable>
+#include "Fase.hpp"
 #include "Jogador.hpp"
 #include "Mesa.hpp"
 
@@ -7,6 +10,10 @@ class Jogo{
     private:
         std::vector<Jogador> &jogadores;
         Mesa mesa;
+        Fase faseAtual;
+        std::mutex mtx;
+        std::condition_variable cv;
+        int jogadoresProntos;
         bool  jogoEncerrado;
         int empate;
         const int LIMITE_EMPATES{ 5 };
@@ -24,4 +31,5 @@ class Jogo{
         void aplicarPenalidadesLimiteEmpates( std::vector<Jogador*> &ativos, int pote );
         int contarJogadoresComSaldo() const;
         void declararCampeaoFinal();
+        Fase getFaseAtual() const;
 };
