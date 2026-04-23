@@ -4,6 +4,7 @@
 enum class Fase {
     ESPERA,
     APOSTA,
+    AUMENTARAPOSTA,
     JOGADA,
     RESULTADO,
     ENCERRADO

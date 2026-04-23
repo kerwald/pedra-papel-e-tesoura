@@ -8,8 +8,33 @@ Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual
 {}
 
 void Jogador::run (){
-    std::cout << "Jogador " << nome << " esta jogando..." << std::endl;
-    std::cout << "fase atual: " << jogo->getFaseAtual() << std::endl;
+
+    while ( !jogo->isEncerrado() && ativoNaRodada ) {
+
+        Fase fase = jogo->esperarProximaFase();
+
+        switch ( fase )
+        {
+        case Fase::APOSTA:
+            std::cout << "Jogador " << nome << " esta apostando..." << std::endl;
+            realizarAposta( );
+            jogo->jogadorTerminouFase();
+            break;
+        case Fase::AUMENTARAPOSTA:
+            std::cout << "Jogador " << nome << " esta aumentando a aposta..." << std::endl;
+            aumentarAposta( );
+            jogo->jogadorTerminouFase();
+            break;
+        case Fase::JOGADA:
+            std::cout << "Jogador " << nome << " esta realizando sua jogada..." << std::endl;
+            coletarJogadaOculta();
+            jogo->jogadorTerminouFase();
+            break;    
+        default:
+            break;
+        }
+
+    }
 }
 
 std::string Jogador::getNome() const{
@@ -60,20 +85,22 @@ void Jogador::reduzirSaldo( const int valor ){
     }
 }
 
-void Jogador::realizarAposta( const int apostaMinima ){
+void Jogador::realizarAposta( ){
 
     std::random_device rd; 
     std::mt19937 gen(rd()); 
-    std::uniform_int_distribution<> distr( apostaMinima, getSaldo() + 10 ); 
+    std::uniform_int_distribution<> distr( 1, getSaldo() + 10 ); 
     int apostaAleatoria = distr(gen);
-    
+
     if( apostaAleatoria >= 0 ){
         if( apostaAleatoria <= saldo ){ 
             saldo -= apostaAleatoria;
             apostaRodadaAtual = apostaAleatoria;
+            jogo->aumentarPote( apostaRodadaAtual );
         } else{ 
             apostaRodadaAtual = saldo; 
             saldo = 0; 
+            jogo->aumentarPote( apostaRodadaAtual );
             std::cout << nome << " deu ALL-IN com " << apostaRodadaAtual << " fichas!" << std::endl;
         }
     } else{
@@ -81,6 +108,29 @@ void Jogador::realizarAposta( const int apostaMinima ){
     }
 
 }
+
+void Jogador::aumentarAposta(){
+    std::random_device rd; 
+    std::mt19937 gen(rd()); 
+    std::uniform_int_distribution<> distr( 1, getSaldo() + 10 ); 
+    int apostaAleatoria = distr(gen);
+
+    if( apostaAleatoria >= 0 ){
+        if( apostaAleatoria <= saldo ){ 
+            saldo -= apostaAleatoria;
+            apostaRodadaAtual += apostaAleatoria;
+            jogo->aumentarPote( apostaAleatoria );
+        } else{ 
+            apostaRodadaAtual += saldo; 
+            jogo->aumentarPote( saldo );
+            saldo = 0; 
+            std::cout << nome << " deu ALL-IN com " << apostaRodadaAtual << " fichas!" << std::endl;
+        }
+    } else{
+        std::cerr << "Valor invalido!!!" << std::endl;
+    }
+}
+
 
 void Jogador::resetarRodada(){
 

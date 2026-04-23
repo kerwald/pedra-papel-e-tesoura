@@ -2,10 +2,12 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
+#include <thread>
+#include <random>
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ) {
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ), jogadoresProntos(0), pote(0) {
 
     int numDeJogadores;
     do{
@@ -30,6 +32,10 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores 
 
 void Jogo::iniciar(){
 
+    for (Jogador& j : jogadores) {
+        threads.emplace_back( &Jogador::run, &j );
+    }
+
     int rodada{0};
 
     do{
@@ -40,14 +46,22 @@ void Jogo::iniciar(){
             declararCampeaoFinal();
         }
 
-    }while( !jogoEncerrado );
-    
+    }while( !jogoEncerrado );   
+
+    faseAtual = Fase::ENCERRADO;
+    cv.notify_all();
+
+    for ( std::thread& t : threads ) {
+        if ( t.joinable() ) {
+            t.join();
+        }
+    }   
     
 }
 
 void Jogo::executarRodada( const int numeroRodada ){
 
-    int pote{0};
+    pote = 0;
     std::vector<Jogador*> ativos;
     std::vector<Jogador*> vencedores;
     
@@ -61,12 +75,14 @@ void Jogo::executarRodada( const int numeroRodada ){
 
     imprimirStatusMesa();
 
-    for( Jogador* &j : ativos ){
-        j->realizarAposta( solicitarAposta( *j, 1 ) );
-        pote += j->getApostaRodadaAtual();
-    }
+    mudarFase( Fase::APOSTA );
+    esperarTodosTerminarem();
+    mudarFase( Fase::ESPERA );
 
-    coletarJogadasOcultas( ativos );
+
+    mudarFase( Fase::JOGADA );
+    esperarTodosTerminarem();
+    mudarFase( Fase::ESPERA );
 
     vencedores = determinarVencedores( ativos );
 
@@ -106,6 +122,10 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
     int devolucaoJogador{0};
     int devolucaoMesa{0};
     std::vector<Jogador*> continuamNaRodada;
+    std::random_device rd; 
+    std::mt19937 gen(rd()); 
+    std::uniform_int_distribution<> distr(0, 1); 
+    bool continuar = (bool) distr(gen);
 
     for( Jogador* &j : ativos ){
         if( j->getSaldo() == 0 ){
@@ -113,12 +133,9 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
             continuamNaRodada.push_back( j );
         } else{
             std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
-            std::cin >> continuar;
+            bool continuar = (bool) distr(gen);
             if( continuar ){
                 continuamNaRodada.push_back( j );
-                j->reduzirSaldo( 1 );
-                j->realizarAposta( j->getApostaRodadaAtual() + 1  );
-                pote++;
             }else{
                 devolucaoJogador = (int) std::ceil( (double) ( j->getApostaRodadaAtual() ) / 2.0 );
                 devolucaoMesa = j->getApostaRodadaAtual() - devolucaoJogador;
@@ -131,9 +148,15 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
     }
     ativos.clear();
     ativos = continuamNaRodada;
+
+    mudarFase( Fase::AUMENTARAPOSTA );
+    esperarTodosTerminarem();
+
     if( ativos.size() > 1 ){
-        coletarJogadasOcultas( ativos );
+        mudarFase( Fase::JOGADA );
+        esperarTodosTerminarem();
     }
+
     std::vector<Jogador*> vencedores = determinarVencedores( ativos );
     if( vencedores.size() == 0 ){
         empate++;
@@ -295,7 +318,40 @@ void Jogo::declararCampeaoFinal(){
     }
     
 }
+void Jogo::mudarFase( Fase novaFase ){
+    faseAtual = novaFase;
+    jogadoresProntos = 0;
+    cv.notify_all();
+}
 
-Fase Jogo::getFaseAtual() const{
+void Jogo::jogadorTerminouFase(){
+    std::lock_guard<std::mutex> lock(mtx);
+    jogadoresProntos++;
+    cv.notify_all();
+}
+
+void Jogo::esperarTodosTerminarem(){
+    std::unique_lock<std::mutex> lock( mtx );
+    cv.wait(lock, [&] {
+        return jogadoresProntos == jogadores.size();
+    });
+}
+
+int Jogo::getPote(){
+    return pote;
+}
+void Jogo::aumentarPote( int valor ){
+    std::lock_guard<std::mutex> lock( mtx );
+    pote += valor;
+}
+
+Fase Jogo::esperarProximaFase() {
+
+    std::unique_lock<std::mutex> lock( mtx );
+
+    cv.wait( lock, [&] {
+        return faseAtual != Fase::ESPERA || jogoEncerrado;
+    });
+
     return faseAtual;
 }
