@@ -24,7 +24,8 @@ class Jogador{
         void setJogadaAtual( const Jogada jogada );
         void adicionarSaldo( const int valor );
         void reduzirSaldo( const int valor );
-        void realizarAposta( const int valor );
+        void realizarAposta( const int apostaMinima );
         void resetarRodada();
         void setJogo( Jogo *jogo );
+        void coletarJogadaOculta();
 };

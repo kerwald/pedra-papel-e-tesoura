@@ -88,49 +88,6 @@ void Jogo::imprimirStatusMesa() const {
     std::cout << mesa.getSaldo() << std::endl;
 }
 
-int Jogo::solicitarAposta( Jogador &j, const int apostaMinima ){
-
-    int aposta{0};
-    do{
-        std::cout << "Valor minimo: " << apostaMinima << std::endl;
-        std::cout << j.getNome() << " faca sua aposta: ";
-        std::cin >> aposta;
-    }while( aposta < apostaMinima );
-
-    return aposta;
-
-}
-
-void Jogo::coletarJogadasOcultas( std::vector<Jogador*> &ativos ){
-
-    for( Jogador* &j : ativos ){
-        if( j->isAtivoNaRodada( ) ){
-
-            char jogada;
-            std::cout << " r -> pedra, p -> papel, s -> tesoura " << std::endl;
-            std::cout << j->getNome() << " faca sua jogada: ";
-            std::cin >> jogada;
-
-            switch ( jogada )
-            {
-            case 'r': // rock = pedra
-                j->setJogadaAtual( Jogada::PEDRA );
-                break;
-            case 'p': // paper = papel
-                j->setJogadaAtual( Jogada::PAPEL );
-                break;
-            case 's': // scissors = tesoura
-                j->setJogadaAtual( Jogada::TESOURA);
-                break;
-            default:
-                std::cerr << "VALOR DIGITADO INVALIDO!!!";
-                break;
-            }
-        }
-        limparConsole();
-    }
-}
-
 void Jogo::limparConsole() const{
     system("cls");
     for( Jogador &j : jogadores ){

@@ -22,8 +22,6 @@ class Jogo{
         void iniciar( );
         void executarRodada( const int numeroRodada );
         void imprimirStatusMesa() const;
-        int solicitarAposta( Jogador &j, const int apostaMinima );
-        void coletarJogadasOcultas( std::vector<Jogador*> &ativos );
         void limparConsole() const;
         int executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote );
         std::vector<Jogador*> determinarVencedores( std::vector<Jogador*> &ativos );
