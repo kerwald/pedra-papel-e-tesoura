@@ -7,7 +7,7 @@
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ), jogadoresProntos(0), pote(0) {
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ), jogadoresProntos(0), pote(0), jogoEncerrado( false ) {
 
     int numDeJogadores;
     do{
@@ -42,14 +42,13 @@ void Jogo::iniciar(){
         rodada++;
         executarRodada( rodada );
         if( contarJogadoresComSaldo() < 2 ){
-            jogoEncerrado = true;
+            encerrarJogo();
             declararCampeaoFinal();
         }
 
     }while( !jogoEncerrado );   
 
-    faseAtual = Fase::ENCERRADO;
-    cv.notify_all();
+    mudarFase(Fase::ENCERRADO);
 
     for ( std::thread& t : threads ) {
         if ( t.joinable() ) {
@@ -61,7 +60,7 @@ void Jogo::iniciar(){
 
 void Jogo::executarRodada( const int numeroRodada ){
 
-    pote = 0;
+    zerarPote();
     std::vector<Jogador*> ativos;
     std::vector<Jogador*> vencedores;
     
@@ -77,24 +76,21 @@ void Jogo::executarRodada( const int numeroRodada ){
 
     mudarFase( Fase::APOSTA );
     esperarTodosTerminarem();
-    mudarFase( Fase::ESPERA );
-
 
     mudarFase( Fase::JOGADA );
     esperarTodosTerminarem();
-    mudarFase( Fase::ESPERA );
 
     vencedores = determinarVencedores( ativos );
 
     if( vencedores.size() == 0 ){
         empate++;
         if( empate == LIMITE_EMPATES ){
-            aplicarPenalidadesLimiteEmpates( ativos, pote );
+            aplicarPenalidadesLimiteEmpates( ativos );
             return;
         }
-        pote = executarSubRodadaDesempate( ativos, pote );
+        executarSubRodadaDesempate( ativos );
     } else{
-        distribuirPremio( ativos, vencedores, pote );
+        distribuirPremio( ativos, vencedores );
         empate = 0;
     }
 
@@ -116,9 +112,8 @@ void Jogo::limparConsole() const{
 
 }
 
-int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
+void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
 
-    bool continuar{ true };
     int devolucaoJogador{0};
     int devolucaoMesa{0};
     std::vector<Jogador*> continuamNaRodada;
@@ -161,15 +156,15 @@ int Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos, int pote ){
     if( vencedores.size() == 0 ){
         empate++;
         if( empate == LIMITE_EMPATES ){
-            aplicarPenalidadesLimiteEmpates( ativos, pote );
-            return pote;
+            aplicarPenalidadesLimiteEmpates( ativos );
+            return;
         }
-        pote = executarSubRodadaDesempate( ativos, pote );
+        executarSubRodadaDesempate( ativos );
     } else{
-        distribuirPremio( ativos, vencedores, pote );
+        distribuirPremio( ativos, vencedores );
         empate = 0;
     }
-    return pote;
+    return;
 }
 
 std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos ){
@@ -224,7 +219,7 @@ std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos 
 
 }
 
-void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*> &vencedores, int &pote ){
+void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*> &vencedores ){
 
     int totalDisponivel = pote + mesa.getSaldo();
     int totalApostadoVencedores{0};
@@ -249,12 +244,12 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
             }else{
                 j->adicionarSaldo( j->getApostaRodadaAtual()*2 );
                 mesa.reduzirSaldo( diferenca );
-                pote = 0;
+                zerarPote();
             }
         }
     } else{
         mesa.adicionarSaldo( pote );
-        pote = 0;
+        zerarPote();
         int parteProporcional{0};
         int resto{ totalDisponivel % totalApostadoVencedores };
         for( Jogador* &j : vencedores ){
@@ -268,7 +263,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
             }
         }
 
-        jogoEncerrado = true;
+        encerrarJogo();
         std::cout << "Mesa nao tem como pagar, jogo encerrado!!! ";
         declararCampeaoFinal();
 
@@ -276,12 +271,12 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
 
     if (pote > 0) {
             mesa.adicionarSaldo( pote );
-            pote = 0;
+            zerarPote();
     }
 
 }
 
-void Jogo::aplicarPenalidadesLimiteEmpates( std::vector<Jogador*> &ativos, int pote ){
+void Jogo::aplicarPenalidadesLimiteEmpates( std::vector<Jogador*> &ativos ){
     for( Jogador* &j : ativos ){
         pote -= j->getApostaRodadaAtual();
         j->adicionarSaldo( j->getApostaRodadaAtual() - 1 );
@@ -319,8 +314,11 @@ void Jogo::declararCampeaoFinal(){
     
 }
 void Jogo::mudarFase( Fase novaFase ){
-    faseAtual = novaFase;
-    jogadoresProntos = 0;
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        faseAtual = novaFase;
+        jogadoresProntos = 0;
+    }
     cv.notify_all();
 }
 
@@ -340,18 +338,38 @@ void Jogo::esperarTodosTerminarem(){
 int Jogo::getPote(){
     return pote;
 }
+
 void Jogo::aumentarPote( int valor ){
     std::lock_guard<std::mutex> lock( mtx );
     pote += valor;
 }
 
-Fase Jogo::esperarProximaFase() {
+void Jogo::zerarPote(){
+    std::lock_guard<std::mutex> lock( mtx );
+    pote = 0;
+}
+
+Fase Jogo::esperarProximaFase( Fase ultimaFase ) {
 
     std::unique_lock<std::mutex> lock( mtx );
 
     cv.wait( lock, [&] {
-        return faseAtual != Fase::ESPERA || jogoEncerrado;
+        return faseAtual != ultimaFase || jogoEncerrado;
     });
 
     return faseAtual;
+}
+
+void Jogo::encerrarJogo() {
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        jogoEncerrado = true;
+        faseAtual = Fase::ENCERRADO;
+    }
+    cv.notify_all();
+}
+
+bool Jogo::isEncerrado() {
+    std::lock_guard<std::mutex> lock(mtx);
+    return jogoEncerrado;
 }

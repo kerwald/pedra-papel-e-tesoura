@@ -4,36 +4,43 @@
 #include "Jogo.hpp"
 #include "Fase.hpp"
 
-Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1)
+Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1), ativoNaRodada( false )
 {}
 
-void Jogador::run (){
+void Jogador::run() {
+    Fase ultimaFase = Fase::ESPERA;
 
-    while ( !jogo->isEncerrado() && ativoNaRodada ) {
+    while (!jogo->isEncerrado()) {
 
-        Fase fase = jogo->esperarProximaFase();
+        Fase fase = jogo->esperarProximaFase( ultimaFase );
 
-        switch ( fase )
-        {
-        case Fase::APOSTA:
-            std::cout << "Jogador " << nome << " esta apostando..." << std::endl;
-            realizarAposta( );
+        if (fase == Fase::ENCERRADO) break;
+
+        if (!ativoNaRodada) {
             jogo->jogadorTerminouFase();
-            break;
-        case Fase::AUMENTARAPOSTA:
-            std::cout << "Jogador " << nome << " esta aumentando a aposta..." << std::endl;
-            aumentarAposta( );
-            jogo->jogadorTerminouFase();
-            break;
-        case Fase::JOGADA:
-            std::cout << "Jogador " << nome << " esta realizando sua jogada..." << std::endl;
-            coletarJogadaOculta();
-            jogo->jogadorTerminouFase();
-            break;    
-        default:
-            break;
+            ultimaFase = fase;
+            continue;
         }
 
+        switch (fase) {
+            case Fase::APOSTA:
+                realizarAposta();
+                break;
+
+            case Fase::AUMENTARAPOSTA:
+                aumentarAposta();
+                break;
+
+            case Fase::JOGADA:
+                coletarJogadaOculta();
+                break;
+
+            default:
+                break;
+        }
+
+        ultimaFase = fase;
+        jogo->jogadorTerminouFase();
     }
 }
 

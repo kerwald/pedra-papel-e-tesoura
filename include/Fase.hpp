@@ -6,7 +6,6 @@ enum class Fase {
     APOSTA,
     AUMENTARAPOSTA,
     JOGADA,
-    RESULTADO,
     ENCERRADO
 };
 
@@ -14,8 +13,8 @@ std::ostream& operator<<( std::ostream& os, Fase fase ) {
     switch ( fase ) {
         case Fase::ESPERA:    os << "ESPERA";    break;
         case Fase::APOSTA:    os << "APOSTA";    break;
+        case Fase::AUMENTARAPOSTA:    os << "AUMENTAR APOSTA";    break;
         case Fase::JOGADA:    os << "JOGADA";    break;
-        case Fase::RESULTADO: os << "RESULTADO"; break;
         case Fase::ENCERRADO: os << "ENCERRADO"; break;
     }
     return os;
