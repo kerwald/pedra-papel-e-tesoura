@@ -99,7 +99,7 @@ void Jogo::executarRodada( const int numeroRodada ){
 }
 
 void Jogo::imprimirStatus() const{
-    
+
     for( Jogador &j : jogadores ){
         if( j.isAtivoNaRodada() ){
             std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
@@ -139,18 +139,20 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
         }   
     }
 
+    if( continuamNaRodada.size() == 0 ){
+        return;
+    }
+
     imprimirStatus();
 
-    mudarFase( Fase::AUMENTARAPOSTA );
-    esperarTodosTerminarem( );
-
     if( continuamNaRodada.size() > 1 ){
+        mudarFase( Fase::AUMENTARAPOSTA );
+        esperarTodosTerminarem( );
         mudarFase( Fase::JOGADA );
         esperarTodosTerminarem( );
     }
 
     std::vector<Jogador*> vencedores = determinarVencedores( continuamNaRodada );
-
 
     if( vencedores.size() == 0 ){
         empate++;
@@ -183,6 +185,10 @@ std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos 
     bool tesoura{ false };
     Jogada jogadaVencedora;
     std::vector<Jogador*> vencedores{};
+
+    if( ativos.size() == 0 ){
+        return vencedores;
+    }
 
     if( ativos.size() == 1 ){
         vencedores.push_back( ativos[0] );
