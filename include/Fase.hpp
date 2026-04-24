@@ -9,7 +9,7 @@ enum class Fase {
     ENCERRADO
 };
 
-std::ostream& operator<<( std::ostream& os, Fase fase ) {
+inline std::ostream& operator<<( std::ostream& os, Fase fase ) {
     switch ( fase ) {
         case Fase::ESPERA:    os << "ESPERA";    break;
         case Fase::APOSTA:    os << "APOSTA";    break;

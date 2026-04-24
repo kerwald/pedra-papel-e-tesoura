@@ -7,7 +7,9 @@
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), empate(0), faseAtual( Fase::ESPERA ), jogadoresProntos(0), pote(0), jogoEncerrado( false ) {
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), pote( 0 ), faseAtual( Fase::ESPERA ), jogadoresProntos( 0 ), empate( 0 ), jogoEncerrado( false ) {
+
+    jogadores.reserve( 6 );
 
     int numDeJogadores;
     do{
@@ -329,7 +331,7 @@ void Jogo::jogadorTerminouFase(){
 void Jogo::esperarTodosTerminarem(){
     std::unique_lock<std::mutex> lock( mtx );
     cv.wait(lock, [&] {
-        return jogadoresProntos == jogadores.size();
+        return ( size_t ) jogadoresProntos == jogadores.size();
     });
 }
 

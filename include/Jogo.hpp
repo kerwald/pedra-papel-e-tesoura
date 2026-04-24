@@ -1,11 +1,18 @@
 #pragma once
+
+#ifndef JOGO_HPP
+#define JOGO_HPP
+
 #include <vector>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
 #include "Fase.hpp"
-#include "Jogador.hpp"
 #include "Mesa.hpp"
+
+// FORWARD DECLARATION: Avisa ao compilador que 'Jogador' existe, 
+// sem precisar ler o arquivo .hpp dele agora.
+class Jogador;
 
 class Jogo{
     private:
@@ -44,3 +51,5 @@ class Jogo{
         void encerrarJogo();
 
 };
+
+#endif
