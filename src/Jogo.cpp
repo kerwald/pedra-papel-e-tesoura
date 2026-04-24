@@ -7,7 +7,7 @@
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), pote( 0 ), gen( std::random_device{}() ), faseAtual( Fase::ESPERA ), jogadoresProntos( 0 ), empate( 0 ), jogoEncerrado( false ) {
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : jogadores( jogadores ), gen( std::random_device{}() ), mesa( 0 ), pote( 0 ), faseAtual( Fase::ESPERA ), jogadoresProntos( 0 ), jogoEncerrado( false ), empate( 0 ) {
 
     int numDeJogadores;
     do{
@@ -40,9 +40,9 @@ void Jogo::iniciar(){
 
     do{
         rodada++;
+        std::cout << "RODADA : " << rodada << std::endl;
         executarRodada( rodada );
         if( contarJogadoresComSaldo() < 2 ){
-            declararCampeaoFinal();
             encerrarJogo();
         }
         
@@ -54,7 +54,8 @@ void Jogo::iniciar(){
         }
     }   
 
-    
+    declararCampeaoFinal();
+
 }
 
 void Jogo::executarRodada( const int numeroRodada ){
@@ -65,7 +66,6 @@ void Jogo::executarRodada( const int numeroRodada ){
     
     for( Jogador &j : jogadores ){
         if( j.getSaldo() > 0 ){
-            std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
             j.setAtivoNaRodada( true );
             ativos.push_back( &j );
         } 
@@ -99,6 +99,7 @@ void Jogo::executarRodada( const int numeroRodada ){
 }
 
 void Jogo::imprimirStatus() const{
+    
     for( Jogador &j : jogadores ){
         if( j.isAtivoNaRodada() ){
             std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
@@ -261,7 +262,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
         int parteProporcional{0};
         int resto{ totalDisponivel % totalApostadoVencedores };
         for( Jogador* &j : vencedores ){
-            parteProporcional = ( totalDisponivel * j->getApostaRodadaAtual()) / totalApostadoVencedores;
+            parteProporcional = ( totalDisponivel * j->getApostaRodadaAtual() ) / totalApostadoVencedores;
             j->adicionarSaldo( parteProporcional );
             mesa.reduzirSaldo( parteProporcional );
             if( resto > 0 ){
@@ -273,7 +274,6 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
 
         encerrarJogo();
         std::cout << "Mesa nao tem como pagar, jogo encerrado!!! ";
-        declararCampeaoFinal();
 
     }
 

@@ -14,6 +14,7 @@ class Jogador{
         Jogada jogadaAtual;
         bool ativoNaRodada;
         std::mt19937 gen;
+        
     public:
         Jogador( const std::string nome );
         void run (); 

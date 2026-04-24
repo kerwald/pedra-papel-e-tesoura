@@ -4,7 +4,16 @@
 #include "Jogo.hpp"
 #include "Fase.hpp"
 
-Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), gen( std::random_device{}() ), apostaRodadaAtual(1), ativoNaRodada( false ), jogo( nullptr )
+
+        Jogo *jogo;
+        const std::string nome;
+        int saldo;
+        int apostaRodadaAtual;
+        Jogada jogadaAtual;
+        bool ativoNaRodada;
+        std::mt19937 gen;
+
+Jogador::Jogador( const std::string nome ) : jogo( nullptr ), nome( nome ), saldo(0), apostaRodadaAtual(1), jogadaAtual(), ativoNaRodada( false ), gen( std::random_device{}() )
 {}
 
 void Jogador::run() {
@@ -94,7 +103,7 @@ void Jogador::reduzirSaldo( const int valor ){
 
 void Jogador::realizarAposta( ){
 
-    std::uniform_int_distribution<> distr( 0, getSaldo() ); 
+    std::uniform_int_distribution<> distr( 0, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
@@ -116,7 +125,7 @@ void Jogador::realizarAposta( ){
 
 void Jogador::aumentarAposta(){
 
-    std::uniform_int_distribution<> distr( 0, getSaldo() ); 
+    std::uniform_int_distribution<> distr( 0, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
