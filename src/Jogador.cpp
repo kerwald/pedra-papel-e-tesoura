@@ -4,7 +4,7 @@
 #include "Jogo.hpp"
 #include "Fase.hpp"
 
-Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), apostaRodadaAtual(1), ativoNaRodada( false )
+Jogador::Jogador( const std::string nome ) : nome( nome ), saldo(0), jogadaAtual(), gen( std::random_device{}() ), apostaRodadaAtual(1), ativoNaRodada( false ), jogo( nullptr )
 {}
 
 void Jogador::run() {
@@ -16,7 +16,7 @@ void Jogador::run() {
 
         if (fase == Fase::ENCERRADO) break;
 
-        if (!ativoNaRodada) {
+        if ( !ativoNaRodada ) {
             jogo->jogadorTerminouFase();
             ultimaFase = fase;
             continue;
@@ -94,9 +94,7 @@ void Jogador::reduzirSaldo( const int valor ){
 
 void Jogador::realizarAposta( ){
 
-    std::random_device rd; 
-    std::mt19937 gen(rd()); 
-    std::uniform_int_distribution<> distr( 1, getSaldo() + 10 ); 
+    std::uniform_int_distribution<> distr( 0, getSaldo() ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
@@ -117,9 +115,8 @@ void Jogador::realizarAposta( ){
 }
 
 void Jogador::aumentarAposta(){
-    std::random_device rd; 
-    std::mt19937 gen(rd()); 
-    std::uniform_int_distribution<> distr( 1, getSaldo() + 10 ); 
+
+    std::uniform_int_distribution<> distr( 0, getSaldo() ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
@@ -152,8 +149,6 @@ void Jogador::setJogo( Jogo *jogo ){
 
 void Jogador::coletarJogadaOculta(){
 
-    std::random_device rd; 
-    std::mt19937 gen(rd()); 
     std::uniform_int_distribution<> distr(1, 3); 
     Jogada jogadaAleatoria = (Jogada) distr(gen);
 

@@ -7,9 +7,7 @@
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 
-Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), pote( 0 ), faseAtual( Fase::ESPERA ), jogadoresProntos( 0 ), empate( 0 ), jogoEncerrado( false ) {
-
-    jogadores.reserve( 6 );
+Jogo::Jogo( std::vector<Jogador> &jogadores ) : mesa( 0 ), jogadores( jogadores ), pote( 0 ), gen( std::random_device{}() ), faseAtual( Fase::ESPERA ), jogadoresProntos( 0 ), empate( 0 ), jogoEncerrado( false ) {
 
     int numDeJogadores;
     do{
@@ -44,10 +42,10 @@ void Jogo::iniciar(){
         rodada++;
         executarRodada( rodada );
         if( contarJogadoresComSaldo() < 2 ){
-            encerrarJogo();
             declararCampeaoFinal();
+            encerrarJogo();
         }
-
+        
     }while( !isEncerrado() );   
 
     for ( std::thread& t : threads ) {
@@ -55,6 +53,7 @@ void Jogo::iniciar(){
             t.join();
         }
     }   
+
     
 }
 
@@ -70,15 +69,18 @@ void Jogo::executarRodada( const int numeroRodada ){
             j.setAtivoNaRodada( true );
             ativos.push_back( &j );
         } 
+        else{
+            j.setAtivoNaRodada( false );
+        } 
     }
 
-    imprimirStatusMesa();
+    imprimirStatus();
 
     mudarFase( Fase::APOSTA );
-    esperarTodosTerminarem();
+    esperarTodosTerminarem( );
 
     mudarFase( Fase::JOGADA );
-    esperarTodosTerminarem();
+    esperarTodosTerminarem( );
 
     vencedores = determinarVencedores( ativos );
 
@@ -96,19 +98,14 @@ void Jogo::executarRodada( const int numeroRodada ){
 
 }
 
-void Jogo::imprimirStatusMesa() const {
-    std::cout << mesa.getSaldo() << std::endl;
-}
-
-void Jogo::limparConsole() const{
-    system("cls");
+void Jogo::imprimirStatus() const{
     for( Jogador &j : jogadores ){
         if( j.isAtivoNaRodada() ){
             std::cout << j.getNome() << " "  << j.getSaldo() << std::endl;
         } 
     }
 
-    imprimirStatusMesa();
+    std::cout << mesa.getSaldo() << std::endl;
 
 }
 
@@ -116,19 +113,18 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
 
     int devolucaoJogador{0};
     int devolucaoMesa{0};
-    std::vector<Jogador*> continuamNaRodada;
-    std::random_device rd; 
-    std::mt19937 gen(rd()); 
     std::uniform_int_distribution<> distr(0, 1); 
     bool continuar;
+    std::vector<Jogador*> continuamNaRodada;
 
     for( Jogador* &j : ativos ){
-        if( j->getSaldo() == 0 ){
+        if( j->getSaldo() == 0 && j->isAtivoNaRodada() ){
             std::cout << j->getNome() << " continua em all-in!!" << std::endl;
             continuamNaRodada.push_back( j );
         } else{
             std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
             continuar = (bool) distr(gen);
+            std::cout << continuar << std::endl;
             if( continuar ){
                 continuamNaRodada.push_back( j );
             }else{
@@ -141,27 +137,39 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
             }
         }   
     }
-    ativos.clear();
-    ativos = continuamNaRodada;
+
+    imprimirStatus();
 
     mudarFase( Fase::AUMENTARAPOSTA );
-    esperarTodosTerminarem();
+    esperarTodosTerminarem( );
 
-    if( ativos.size() > 1 ){
+    if( continuamNaRodada.size() > 1 ){
         mudarFase( Fase::JOGADA );
-        esperarTodosTerminarem();
+        esperarTodosTerminarem( );
     }
 
-    std::vector<Jogador*> vencedores = determinarVencedores( ativos );
+    std::vector<Jogador*> vencedores = determinarVencedores( continuamNaRodada );
+
+
     if( vencedores.size() == 0 ){
         empate++;
         if( empate == LIMITE_EMPATES ){
-            aplicarPenalidadesLimiteEmpates( ativos );
+            aplicarPenalidadesLimiteEmpates( continuamNaRodada );
             return;
+        }
+        
+        ativos.clear();
+        for( Jogador* &j : continuamNaRodada ){
+            if( j->getSaldo() > 0 ){
+                j->setAtivoNaRodada( true );
+                ativos.push_back( j );
+            } else{
+                j->setAtivoNaRodada( false );
+            } 
         }
         executarSubRodadaDesempate( ativos );
     } else{
-        distribuirPremio( ativos, vencedores );
+        distribuirPremio( continuamNaRodada, vencedores );
         empate = 0;
     }
     return;
@@ -328,7 +336,7 @@ void Jogo::jogadorTerminouFase(){
     cv.notify_all();
 }
 
-void Jogo::esperarTodosTerminarem(){
+void Jogo::esperarTodosTerminarem( ){
     std::unique_lock<std::mutex> lock( mtx );
     cv.wait(lock, [&] {
         return ( size_t ) jogadoresProntos == jogadores.size();

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <random>
 #include "Jogada.hpp"
 #include "Jogo.hpp"
 
@@ -12,6 +13,7 @@ class Jogador{
         int apostaRodadaAtual;
         Jogada jogadaAtual;
         bool ativoNaRodada;
+        std::mt19937 gen;
     public:
         Jogador( const std::string nome );
         void run (); 

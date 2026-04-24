@@ -9,6 +9,7 @@
 #include <thread>
 #include "Fase.hpp"
 #include "Mesa.hpp"
+#include <random>
 
 // FORWARD DECLARATION: Avisa ao compilador que 'Jogador' existe, 
 // sem precisar ler o arquivo .hpp dele agora.
@@ -18,6 +19,7 @@ class Jogo{
     private:
         std::vector<Jogador> &jogadores;
         std::vector<std::thread> threads;
+        std::mt19937 gen;
         Mesa mesa;
         int pote;
         Fase faseAtual;
@@ -32,8 +34,7 @@ class Jogo{
         Jogo( std::vector<Jogador> &jogadores );
         void iniciar( );
         void executarRodada( const int numeroRodada );
-        void imprimirStatusMesa() const;
-        void limparConsole() const;
+        void imprimirStatus() const;
         void executarSubRodadaDesempate( std::vector<Jogador*> &ativos );
         std::vector<Jogador*> determinarVencedores( std::vector<Jogador*> &ativos );
         void distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*> &vencedores );
@@ -42,7 +43,7 @@ class Jogo{
         void declararCampeaoFinal();
         Fase esperarProximaFase( Fase ultimaFase );
         void mudarFase( Fase novaFase );
-        void esperarTodosTerminarem();
+        void esperarTodosTerminarem( );
         void jogadorTerminouFase();
         bool isEncerrado();
         int getPote();
