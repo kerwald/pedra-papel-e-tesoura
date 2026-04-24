@@ -46,9 +46,7 @@ void Jogo::iniciar(){
             declararCampeaoFinal();
         }
 
-    }while( !jogoEncerrado );   
-
-    mudarFase(Fase::ENCERRADO);
+    }while( !isEncerrado() );   
 
     for ( std::thread& t : threads ) {
         if ( t.joinable() ) {
@@ -120,7 +118,7 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
     std::random_device rd; 
     std::mt19937 gen(rd()); 
     std::uniform_int_distribution<> distr(0, 1); 
-    bool continuar = (bool) distr(gen);
+    bool continuar;
 
     for( Jogador* &j : ativos ){
         if( j->getSaldo() == 0 ){
@@ -128,7 +126,7 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
             continuamNaRodada.push_back( j );
         } else{
             std::cout << j->getNome() << " por favor digite 1 para continuar ou 0 para desistir da rodada: ";
-            bool continuar = (bool) distr(gen);
+            continuar = (bool) distr(gen);
             if( continuar ){
                 continuamNaRodada.push_back( j );
             }else{
@@ -336,6 +334,7 @@ void Jogo::esperarTodosTerminarem(){
 }
 
 int Jogo::getPote(){
+    std::lock_guard<std::mutex> lock( mtx );
     return pote;
 }
 
