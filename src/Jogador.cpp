@@ -110,6 +110,7 @@ void Jogador::realizarAposta( ){
             saldo -= apostaAleatoria;
             apostaRodadaAtual = apostaAleatoria;
             jogo->aumentarPote( apostaRodadaAtual );
+            jogo->imprimirMensagem( nome + " apostou " + std::to_string( apostaRodadaAtual ) + " fichas!" );
         } else{ 
             apostaRodadaAtual = saldo; 
             saldo = 0; 
@@ -124,6 +125,11 @@ void Jogador::realizarAposta( ){
 
 void Jogador::aumentarAposta(){
 
+    if (saldo == 0) {
+        jogo->imprimirMensagem( nome + " continua em ALL-IN!!" );
+        return; 
+    }
+
     std::uniform_int_distribution<> distr( 1, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
     int apostaAleatoria = distr(gen);
 
@@ -132,11 +138,13 @@ void Jogador::aumentarAposta(){
             saldo -= apostaAleatoria;
             apostaRodadaAtual += apostaAleatoria;
             jogo->aumentarPote( apostaAleatoria );
+            jogo->imprimirMensagem( nome + " aumentou a aposta em " + std::to_string( apostaAleatoria ) + " fichas!" );
         } else{ 
-            apostaRodadaAtual += saldo; 
-            jogo->aumentarPote( saldo );
-            saldo = 0; 
-            jogo->imprimirMensagem( nome + " deu ALL-IN com " + std::to_string( apostaRodadaAtual ) + " fichas!" );
+            int valorAumentado = saldo;
+            saldo = 0;
+            apostaRodadaAtual += valorAumentado; 
+            jogo->aumentarPote( valorAumentado );
+            jogo->imprimirMensagem( nome + " deu ALL-IN com " + std::to_string( valorAumentado ) + " fichas!" );
         }
     } else{
         jogo->imprimirMensagem( "Valor invalido!!!" );

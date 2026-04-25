@@ -13,13 +13,12 @@ Jogo::Jogo( std::vector<Jogador> &jogadores ) : jogadores( jogadores ), gen( std
     do{
         std::cout << "Digite o numero de jogadores ( 2 - 6 ) : ";
         std::cin >> numDeJogadores;
+
     } while( numDeJogadores < 2 || numDeJogadores > 6 );
 
-    for( int i=1; i<=numDeJogadores; i++ ){
-        std::string nome;
-        std::cout << "jogador numero " << i << " digite seu nome: ";
-        std::cin >> nome;
-        Jogador jogador( nome );
+    std::vector<std::string> nomes = { "Felipe", "Andre", "Lucas", "Douglas", "Mateus", "Joana" };
+    for( int i = 0; i < numDeJogadores; i++ ){
+        Jogador jogador( nomes[i] );
         jogador.adicionarSaldo( 10 );
         jogador.setJogo( this );
         jogadores.push_back( jogador );
@@ -245,10 +244,11 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
     int totalApostadoVencedores{0};
     int totalPremioVencedores{0};
 
-    if( vencedores.size() == 1 ){        
-        vencedores[0]->adicionarSaldo( pote );
-        zerarPote();
-        std::cout << "O jogador " << vencedores[0]->getNome() << " venceu a rodada e ganhou " << pote << " fichas! o pote inteiro!!" << std::endl;
+    if( vencedores.size() == 1 ){    
+        int valor = pote;
+        zerarPote();    
+        vencedores[0]->adicionarSaldo( valor );
+        std::cout << "O jogador " << vencedores[0]->getNome() << " venceu a rodada e ganhou " << valor << " fichas! O pote inteiro!!" << std::endl;
         return;
     }
 
@@ -292,7 +292,7 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
         }
 
         encerrarJogo();
-        std::cout << "Mesa nao tem como pagar, jogo encerrado!!! ";
+        std::cout << "Mesa nao tem como pagar, jogo encerrado!!! " << std::endl;
 
     }
 
@@ -336,9 +336,9 @@ void Jogo::declararCampeaoFinal(){
     }
 
     if( campeao != nullptr ){
-        std::cout << " O jogador " << campeao->getNome() <<  " e o grande campeao!!!" << std::endl;
+        std::cout << "O jogador " << campeao->getNome() <<  " e o grande campeao!!!" << std::endl;
     } else{
-        std::cout << " Jogo finalizado sem campeao!!! " << std::endl;
+        std::cout << "Jogo finalizado sem campeao!!! " << std::endl;
     }
     
 }
@@ -414,7 +414,7 @@ std::string Jogo::jogadaToString( Jogada jogada ){
     }
 }
 
-void Jogo::imprimirMensagem(const std::string& mensagem) {
+void Jogo::imprimirMensagem( const std::string& mensagem ) {
     std::lock_guard<std::mutex> lock( mtx );
     std::cout << mensagem << std::endl;
 }
