@@ -50,6 +50,8 @@ class Jogo{
         void zerarPote();
         void aumentarPote( int valor );
         void encerrarJogo();
+        std::string jogadaToString( Jogada jogada );
+        void imprimirMensagem( const std::string& mensagem ); 
 
 };
 

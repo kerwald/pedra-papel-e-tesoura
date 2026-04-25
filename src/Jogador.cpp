@@ -1,20 +1,19 @@
 #include <iostream>
 #include <random>
+#include "Jogada.hpp"
 #include "Jogador.hpp"
 #include "Jogo.hpp"
 #include "Fase.hpp"
 
-
-        Jogo *jogo;
-        const std::string nome;
-        int saldo;
-        int apostaRodadaAtual;
-        Jogada jogadaAtual;
-        bool ativoNaRodada;
-        std::mt19937 gen;
-
-Jogador::Jogador( const std::string nome ) : jogo( nullptr ), nome( nome ), saldo(0), apostaRodadaAtual(1), jogadaAtual(), ativoNaRodada( false ), gen( std::random_device{}() )
-{}
+Jogador::Jogador( const std::string nome ) : jogo( nullptr ), nome( nome ), saldo(0), apostaRodadaAtual(1), jogadaAtual(), ativoNaRodada( false ) 
+{
+    //Pega o tempo do sistema em alta resolução (nanossegundos)
+    auto time_seed = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+    //Transforma o nome do jogador em um número inteiro único (hash)
+    auto name_seed = std::hash<std::string>{}( nome );
+    //Alimenta o motor aleatório misturando o tempo e o nome
+    gen.seed( time_seed ^ name_seed );
+}
 
 void Jogador::run() {
     Fase ultimaFase = Fase::ESPERA;
@@ -103,7 +102,7 @@ void Jogador::reduzirSaldo( const int valor ){
 
 void Jogador::realizarAposta( ){
 
-    std::uniform_int_distribution<> distr( 0, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
+    std::uniform_int_distribution<> distr( 1, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
@@ -115,17 +114,17 @@ void Jogador::realizarAposta( ){
             apostaRodadaAtual = saldo; 
             saldo = 0; 
             jogo->aumentarPote( apostaRodadaAtual );
-            std::cout << nome << " deu ALL-IN com " << apostaRodadaAtual << " fichas!" << std::endl;
+            jogo->imprimirMensagem( nome + " deu ALL-IN com " + std::to_string( apostaRodadaAtual ) + " fichas!" );
         }
     } else{
-        std::cerr << "Valor invalido!!!" << std::endl;
+        jogo->imprimirMensagem( "Valor invalido!!!" );
     }
 
 }
 
 void Jogador::aumentarAposta(){
 
-    std::uniform_int_distribution<> distr( 0, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
+    std::uniform_int_distribution<> distr( 1, getSaldo() + (int) std::ceil( (double) ( getSaldo() ) / 2.0 ) ); 
     int apostaAleatoria = distr(gen);
 
     if( apostaAleatoria >= 0 ){
@@ -137,10 +136,10 @@ void Jogador::aumentarAposta(){
             apostaRodadaAtual += saldo; 
             jogo->aumentarPote( saldo );
             saldo = 0; 
-            std::cout << nome << " deu ALL-IN com " << apostaRodadaAtual << " fichas!" << std::endl;
+            jogo->imprimirMensagem( nome + " deu ALL-IN com " + std::to_string( apostaRodadaAtual ) + " fichas!" );
         }
     } else{
-        std::cerr << "Valor invalido!!!" << std::endl;
+        jogo->imprimirMensagem( "Valor invalido!!!" );
     }
 }
 
@@ -158,7 +157,7 @@ void Jogador::setJogo( Jogo *jogo ){
 
 void Jogador::coletarJogadaOculta(){
 
-    std::uniform_int_distribution<> distr(1, 3); 
+    std::uniform_int_distribution<> distr(0, 2); 
     Jogada jogadaAleatoria = (Jogada) distr(gen);
 
     if( this->isAtivoNaRodada( ) ){
@@ -166,4 +165,3 @@ void Jogador::coletarJogadaOculta(){
     }
 
 }
-

@@ -78,15 +78,25 @@ void Jogo::executarRodada( const int numeroRodada ){
 
     mudarFase( Fase::APOSTA );
     esperarTodosTerminarem( );
+    for( Jogador* &j : ativos ){
+        if( j->isAtivoNaRodada() ){
+            std::cout << j->getNome() << " apostou " << j->getApostaRodadaAtual() << " fichas!" << std::endl;
+        }
+    }
 
     mudarFase( Fase::JOGADA );
+    for( Jogador* &j : ativos ){
+        if( j->isAtivoNaRodada() ){
+            std::cout << j->getNome() << " fez sua jogada oculta: " << jogadaToString( j->getJogadaAtual() ) << std::endl;
+        }
+    }
     esperarTodosTerminarem( );
 
     vencedores = determinarVencedores( ativos );
 
     if( vencedores.size() == 0 ){
         empate++;
-        if( empate == LIMITE_EMPATES ){
+        if( empate >= LIMITE_EMPATES ){
             aplicarPenalidadesLimiteEmpates( ativos );
             return;
         }
@@ -160,17 +170,7 @@ void Jogo::executarSubRodadaDesempate( std::vector<Jogador*> &ativos ){
             aplicarPenalidadesLimiteEmpates( continuamNaRodada );
             return;
         }
-        
-        ativos.clear();
-        for( Jogador* &j : continuamNaRodada ){
-            if( j->getSaldo() > 0 ){
-                j->setAtivoNaRodada( true );
-                ativos.push_back( j );
-            } else{
-                j->setAtivoNaRodada( false );
-            } 
-        }
-        executarSubRodadaDesempate( ativos );
+        executarSubRodadaDesempate( continuamNaRodada );
     } else{
         distribuirPremio( continuamNaRodada, vencedores );
         empate = 0;
@@ -196,6 +196,11 @@ std::vector<Jogador*> Jogo::determinarVencedores( std::vector<Jogador*> &ativos 
     }
 
     for( Jogador* &j : ativos ){
+
+        if( !j->isAtivoNaRodada() ){
+            continue;
+        }
+
         switch ( j->getJogadaAtual() )
         {
         case Jogada::PEDRA :
@@ -239,6 +244,14 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
     int totalDisponivel = pote + mesa.getSaldo();
     int totalApostadoVencedores{0};
     int totalPremioVencedores{0};
+
+    if( vencedores.size() == 1 ){        
+        vencedores[0]->adicionarSaldo( pote );
+        zerarPote();
+        std::cout << "O jogador " << vencedores[0]->getNome() << " venceu a rodada e ganhou " << pote << " fichas! o pote inteiro!!" << std::endl;
+        return;
+    }
+
     for( Jogador* &j : vencedores ){
         totalApostadoVencedores += j->getApostaRodadaAtual();
     }
@@ -291,11 +304,13 @@ void Jogo::distribuirPremio( std::vector<Jogador*> &ativos, std::vector<Jogador*
 }
 
 void Jogo::aplicarPenalidadesLimiteEmpates( std::vector<Jogador*> &ativos ){
+
     for( Jogador* &j : ativos ){
         pote -= j->getApostaRodadaAtual();
         j->adicionarSaldo( j->getApostaRodadaAtual() - 1 );
         mesa.adicionarSaldo(1);
     }
+
 }
 
 int Jogo::contarJogadoresComSaldo() const{
@@ -327,6 +342,7 @@ void Jogo::declararCampeaoFinal(){
     }
     
 }
+
 void Jogo::mudarFase( Fase novaFase ){
     {
         std::lock_guard<std::mutex> lock(mtx);
@@ -387,4 +403,18 @@ void Jogo::encerrarJogo() {
 bool Jogo::isEncerrado() {
     std::lock_guard<std::mutex> lock(mtx);
     return jogoEncerrado;
+}
+
+std::string Jogo::jogadaToString( Jogada jogada ){
+    switch ( jogada ) {
+        case Jogada::PEDRA: return "Pedra";
+        case Jogada::PAPEL: return "Papel";
+        case Jogada::TESOURA: return "Tesoura";
+        default: return "Desconecido";
+    }
+}
+
+void Jogo::imprimirMensagem(const std::string& mensagem) {
+    std::lock_guard<std::mutex> lock( mtx );
+    std::cout << mensagem << std::endl;
 }
